@@ -7,6 +7,8 @@
 //
 
 import UIKit
+import CoreData
+
 
 class ToDoListViewController: UITableViewController {
     
@@ -14,18 +16,24 @@ class ToDoListViewController: UITableViewController {
     let defaults = UserDefaults.standard
     let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
     let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+    
+    
+    @IBOutlet weak var searchBar: UISearchBar!
+    
 
 
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-//        loadItems()
+        searchBar.delegate = self
+        print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
+
+        loadItems()
         
         self.tableView.reloadData()
     }
     
-    // MARK - TableView DataSource Methods
+    // MARK: - TableView DataSource Methods
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return itemArray.count
     }
@@ -37,7 +45,6 @@ class ToDoListViewController: UITableViewController {
         let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
         cell.textLabel?.text = itemArray[indexPath.row].title
 
-        print("cellForRowAtIndexPath called")
         // if else substitue for if the item objects method is done method is true then the checkmark is added otherwise if its not true then the checkmark is removed
         itemArray[indexPath.row].done == true ? (cell.accessoryType = .checkmark): (cell.accessoryType = .none)
         // cell.accessoryType = itemArray[indexPath.row].done ? .checkmark : .none => Another way of doing ternary
@@ -47,20 +54,27 @@ class ToDoListViewController: UITableViewController {
     }
     
     
-    //MARK - Table Delegate Methods
+    //MARK: - Table Delegate Methods
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        print(itemArray[indexPath.row])
+        
+        //deleting an item
+//        context.delete(itemArray[indexPath.row])
+//        itemArray.remove(at: indexPath.row)
+        
+        
+        
         
         // if else substitute for if the done property is certain boolean value and is clicked on switch it to the oppposite
         itemArray[indexPath.row].done == false ? (itemArray[indexPath.row].done = true) : (itemArray[indexPath.row].done = false)
-        // Allows us to call cellForRowAt again, and change the accessoryType based on the done property of the item cell
+        
+        
         self.saveItem()
         
         
         tableView.deselectRow(at: indexPath, animated: true)
     }
     
-    //MARK - Add New Items
+    //MARK: - Add New Items
     
     @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
         
@@ -93,7 +107,7 @@ class ToDoListViewController: UITableViewController {
          
     }
     
-    //MARK - Model Manipulation Methods
+    //MARK: - Model Manipulation Methods
     
     func saveItem() {
                 
@@ -107,14 +121,60 @@ class ToDoListViewController: UITableViewController {
         
     }
     
-//    func loadItems(){
-//        if let data = try? Data(contentsOf: dataFilePath!){
-//            let decoder = PropertyListDecoder()
-//            do{
-//                itemArray = try decoder.decode([Item].self, from: data)
-//            }catch{
-//                print("Error decoding item array")
-//            }
-//
+    // Using read in a SQLite database
+    func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest()){
+        do{
+           itemArray = try context.fetch(request)
+        }catch{
+            print("Error fetching data from context \(error)")
+        }
+        
+        tableView.reloadData()
+     }
+    
+    
+
+}
+
+// MARK: - Search Bar Methods
+extension ToDoListViewController: UISearchBarDelegate{
+    
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        
+        // customizing the requet
+        let request: NSFetchRequest<Item> = Item.fetchRequest()
+        
+        request.predicate = NSPredicate(format: "title CONTAINS %@", searchBar.text!)
+        
+        request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
+        
+        
+        
+        // fetching the request using context
+        
+        loadItems(with: request)
+        
+        
+//        do{
+//            // assigning the requst to our itemArray
+//           itemArray = try context.fetch(request)
+//        }catch{
+//            print("Error fetching data from context \(error)")
 //        }
+        
+        tableView.reloadData()
+        
     }
+    
+    
+    
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        if(searchBar.text?.count == 0){
+            loadItems()
+        }
+        
+    }
+    
+    
+    
+}
