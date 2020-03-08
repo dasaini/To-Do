@@ -36,6 +36,7 @@
                     </tableView>
                     <navigationItem key="navigationItem" title="Items" id="aLH-ii-qQa">
                         <barButtonItem key="rightBarButtonItem" systemItem="add" id="nbm-5w-s6k">
+                            <color key="tintColor" red="0.96078431369999995" green="0.95686274510000002" blue="0.94509803920000002" alpha="1" colorSpace="calibratedRGB"/>
                             <connections>
                                 <action selector="addButtonPressed:" destination="p7l-ia-syp" id="yt7-oN-2NA"/>
                             </connections>
@@ -57,9 +58,14 @@
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
+                        <searchBar key="tableHeaderView" contentMode="redraw" id="mRC-vQ-oLo">
+                            <rect key="frame" x="0.0" y="0.0" width="414" height="44"/>
+                            <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
+                            <textInputTraits key="textInputTraits"/>
+                        </searchBar>
                         <prototypes>
                             <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" reuseIdentifier="CategoryCell" id="I5I-l6-VhJ">
-                                <rect key="frame" x="0.0" y="28" width="414" height="43.5"/>
+                                <rect key="frame" x="0.0" y="72" width="414" height="43.5"/>
                                 <autoresizingMask key="autoresizingMask"/>
                                 <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="I5I-l6-VhJ" id="eEa-ns-bcD">
                                     <rect key="frame" x="0.0" y="0.0" width="414" height="43.5"/>
@@ -81,6 +87,7 @@
                         </barButtonItem>
                     </navigationItem>
                     <connections>
+                        <outlet property="categorySearchBar" destination="mRC-vQ-oLo" id="dEb-g3-t5q"/>
                         <segue destination="p7l-ia-syp" kind="show" identifier="goToItems" id="bGV-qM-9Yd"/>
                     </connections>
                 </tableViewController>

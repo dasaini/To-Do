@@ -13,12 +13,16 @@ import CoreData
 class ToDoListViewController: UITableViewController {
     
     var itemArray = [Item]()
-    let defaults = UserDefaults.standard
-    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
+    var selectedCategory: Category?{
+        didSet{
+            loadItems()
+        }
+    }
     let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     
     
     @IBOutlet weak var searchBar: UISearchBar!
+    
     
 
 
@@ -27,9 +31,7 @@ class ToDoListViewController: UITableViewController {
         super.viewDidLoad()
         searchBar.delegate = self
         print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
-
-        loadItems()
-        
+        // dont need loaded items here anymore because this view controller is always called via segue. And loadItems is called for during the prepare of the segue via the selectedCategory: Category? variable.
         self.tableView.reloadData()
     }
     
@@ -75,7 +77,7 @@ class ToDoListViewController: UITableViewController {
     }
     
     //MARK: - Add New Items
-    
+
     @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
         
         var textField = UITextField()
@@ -88,6 +90,8 @@ class ToDoListViewController: UITableViewController {
             let newItem = Item(context: self.context)
             newItem.title = textField.text!
             newItem.done = false
+            // need to establish relationship now
+            newItem.parentCategory = self.selectedCategory
             self.itemArray.append(newItem)
             
             self.saveItem()
@@ -109,7 +113,7 @@ class ToDoListViewController: UITableViewController {
     
     //MARK: - Model Manipulation Methods
     
-    func saveItem() {
+func saveItem() {
                 
         do{
             try context.save()
@@ -122,7 +126,19 @@ class ToDoListViewController: UITableViewController {
     }
     
     // Using read in a SQLite database
-    func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest()){
+    func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest(), predicate: NSPredicate? = nil){
+        let categoryPredicate = NSPredicate(format: "parentCategory.name MATCHES %@", selectedCategory!.name!)
+        
+        if let additionalPredicate = predicate{
+            let compoundPredicate = NSCompoundPredicate(andPredicateWithSubpredicates: [categoryPredicate, additionalPredicate])
+            request.predicate = compoundPredicate
+        }else{
+            request.predicate = categoryPredicate
+        }
+        
+        
+//        let compoundPredicate = NSCompoundPredicate(andPredicateWithSubpredicates: [categoryPredicate, predicate])
+//        request.predicate = compoundPredicate
         do{
            itemArray = try context.fetch(request)
         }catch{
@@ -144,7 +160,7 @@ extension ToDoListViewController: UISearchBarDelegate{
         // customizing the requet
         let request: NSFetchRequest<Item> = Item.fetchRequest()
         
-        request.predicate = NSPredicate(format: "title CONTAINS %@", searchBar.text!)
+        let predicate = NSPredicate(format: "title CONTAINS %@", searchBar.text!)
         
         request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
         
@@ -152,7 +168,7 @@ extension ToDoListViewController: UISearchBarDelegate{
         
         // fetching the request using context
         
-        loadItems(with: request)
+        loadItems(with: request, predicate: predicate)
         
         
 //        do{
